@@ -1,0 +1,19 @@
+terraform {
+  required_version = ">= 1.10"
+
+  required_providers {
+    aws = {
+      source  = "hashicorp/aws"
+      version = "~> 6.0"
+    }
+  }
+
+  backend "s3" {
+    bucket       = "dev-pipeline-tfstate-349664489413"
+    key          = "dev/baseline/terraform.tfstate"
+    region       = "us-east-1"
+    profile      = "dev-tf"
+    encrypt      = true
+    use_lockfile = true
+  }
+}

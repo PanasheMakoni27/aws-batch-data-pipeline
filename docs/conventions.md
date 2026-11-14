@@ -7,7 +7,7 @@
 
 ## Environments
 - `dev` is where everything is built and tested first.
-- `prod` is deployed only through the CI pipeline (DAY-23 onward), not by hand.
+- `prod` is deployed only through the CI pipeline (DAY-27 onward), not by hand.
 - Rule: nothing in one environment may use a resource that belongs to the other. Each environment has its own buckets, roles, Glue jobs, Redshift workgroup and DAG.
 
 ## Naming
