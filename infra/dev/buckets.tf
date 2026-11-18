@@ -65,9 +65,14 @@ data "aws_iam_policy_document" "layer" {
       identifiers = ["*"]
     }
     condition {
-      test     = "StringNotEqualsIfExists"
+      test     = "StringNotEquals"
       variable = "s3:x-amz-server-side-encryption"
       values   = ["aws:kms"]
+    }
+    condition {
+      test     = "Null"
+      variable = "s3:x-amz-server-side-encryption"
+      values   = ["false"]
     }
   }
 }
@@ -78,3 +83,50 @@ resource "aws_s3_bucket_policy" "layer" {
   policy     = data.aws_iam_policy_document.layer[each.key].json
   depends_on = [aws_s3_bucket_public_access_block.layer]
 }
+
+resource "aws_s3_bucket_lifecycle_configuration" "raw" {
+  bucket     = aws_s3_bucket.layer["raw"].id
+  depends_on = [aws_s3_bucket_versioning.layer]
+  rule {
+    id     = "archive-raw"
+    status = "Enabled"
+    filter {}
+    transition {
+      days          = 30
+      storage_class = "GLACIER_IR"
+    }
+    transition {
+      days          = 180
+      storage_class = "DEEP_ARCHIVE"
+    }
+    expiration {
+      days = 2555
+    }
+    noncurrent_version_expiration {
+      noncurrent_days = 90
+    }
+    abort_incomplete_multipart_upload {
+      days_after_initiation = 7
+    }
+  }
+}
+
+resource "aws_s3_bucket_lifecycle_configuration" "logs" {
+  bucket     = aws_s3_bucket.layer["logs"].id
+  depends_on = [aws_s3_bucket_versioning.layer]
+  rule {
+    id     = "expire-logs"
+    status = "Enabled"
+    filter {}
+    expiration {
+      days = 90
+    }
+    noncurrent_version_expiration {
+      noncurrent_days = 30
+    }
+    abort_incomplete_multipart_upload {
+      days_after_initiation = 7
+    }
+  }
+}
+
