@@ -1,0 +1,68 @@
+# One entry per source table. Settings only. No run state lives here.
+tables:
+  - name: transactions
+    source_schema: Core
+    source_table: Transactions
+    primary_key: TransactionID
+    load_type: incremental
+    watermark_type: change_tracking
+    watermark_column: null
+    partition_column: TransactionDate   # partitioned by year/month
+    active: true
+
+  - name: accounts
+    source_schema: Core
+    source_table: Accounts
+    primary_key: AccountID
+    load_type: incremental
+    watermark_type: change_tracking
+    watermark_column: LastUpdated       # fallback
+    partition_column: null
+    active: true
+
+  - name: customers
+    source_schema: Core
+    source_table: Customers
+    primary_key: CustomerID
+    load_type: incremental
+    watermark_type: change_tracking
+    watermark_column: UpdatedDate       # fallback
+    partition_column: null
+    active: true
+
+  - name: branches
+    source_schema: Core
+    source_table: Branches
+    primary_key: BranchID
+    load_type: full
+    watermark_type: none
+    watermark_column: null
+    partition_column: null
+    active: true
+
+  - name: account_types
+    source_schema: Reference
+    source_table: AccountTypes
+    primary_key: AccountTypeID
+    load_type: full
+    watermark_type: none
+    watermark_column: null
+    partition_column: null
+    active: true
+
+  - name: transaction_types
+    source_schema: Reference
+    source_table: TransactionTypes
+    primary_key: TransactionTypeID
+    load_type: full
+    watermark_type: none
+    watermark_column: null
+    partition_column: null
+    active: true
+
+  # Empty today. Listed so adding data later needs no code change.
+  - { name: loans,         source_schema: Core, source_table: Loans,        primary_key: LoanID,        load_type: incremental, watermark_type: change_tracking, watermark_column: null, partition_column: null, active: false }
+  - { name: loan_payments, source_schema: Core, source_table: LoanPayments, primary_key: LoanPaymentID, load_type: incremental, watermark_type: change_tracking, watermark_column: null, partition_column: null, active: false }
+  - { name: payments,      source_schema: Core, source_table: Payments,     primary_key: PaymentID,     load_type: incremental, watermark_type: change_tracking, watermark_column: null, partition_column: null, active: false }
+  - { name: cards,         source_schema: Core, source_table: Cards,        primary_key: CardID,        load_type: incremental, watermark_type: change_tracking, watermark_column: null, partition_column: null, active: false }
+  - { name: merchants,     source_schema: Core, source_table: Merchants,    primary_key: MerchantID,    load_type: incremental, watermark_type: change_tracking, watermark_column: null, partition_column: null, active: false }
