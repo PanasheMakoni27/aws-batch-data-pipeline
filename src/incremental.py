@@ -1,4 +1,4 @@
-﻿"""Incremental extract for Change Tracking tables.
+"""Incremental extract for Change Tracking tables.
 
 Cycle per table:
   1. read the saved bookmark and snapshot the current version (BEFORE extracting)
@@ -17,6 +17,7 @@ import pyarrow.parquet as pq
 from config import active_tables, load_tables
 from db import get_connection
 from extract import BATCH_SIZE, OUTPUT_DIR, build_schema, extract_table, verify
+from runlog_export import export_run_log
 from upload import get_session, raw_bucket, upload_table
 from watermark import (
     decide_mode,
@@ -141,6 +142,11 @@ def main():
         except Exception as exc:
             failed = True
             print(f"{cfg['name']}: FAILED - {exc}")
+    try:
+        key = export_run_log(session, bucket, run_id, load_date)
+        print(f"run log exported: {key}")
+    except Exception as exc:
+        print(f"run log export FAILED (pipeline result unaffected): {exc}")
     sys.exit(1 if failed else 0)
 
 
