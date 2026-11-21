@@ -1,4 +1,4 @@
-"""Upload extracted Parquet files to the raw bucket, then write the manifest last."""
+﻿"""Upload extracted Parquet files to the raw bucket, then write the manifest last."""
 import hashlib
 import json
 from datetime import datetime, timezone
@@ -26,10 +26,14 @@ def sha256_of(path, chunk=8 * 1024 * 1024):
     return h.hexdigest()
 
 
-def upload_table(session, bucket, cfg, out_file, rows, run_id, load_date):
+def upload_table(session, bucket, cfg, out_file, rows, run_id, load_date,
+                 load_type="full", extra=None):
     s3 = session.client("s3")
     out_file = Path(out_file)
     prefix = f'{cfg["name"]}/load_date={load_date}'
+    if load_type == "incremental":
+        # One folder per run, so two runs on the same day never overwrite each other.
+        prefix += f"/run_id={run_id}"
     key = f"{prefix}/{out_file.name}"
 
     # Data file first. S3 verifies the SHA-256 during transfer.
@@ -40,7 +44,7 @@ def upload_table(session, bucket, cfg, out_file, rows, run_id, load_date):
     manifest = {
         "run_id": str(run_id),
         "table": cfg["name"],
-        "load_type": "full",
+        "load_type": load_type,
         "load_date": load_date,
         "created_at": datetime.now(timezone.utc).isoformat(),
         "files": [
@@ -53,6 +57,8 @@ def upload_table(session, bucket, cfg, out_file, rows, run_id, load_date):
         ],
         "total_rows": rows,
     }
+    if extra:
+        manifest.update(extra)
     s3.put_object(
         Bucket=bucket,
         Key=f"{prefix}/_manifest.json",
