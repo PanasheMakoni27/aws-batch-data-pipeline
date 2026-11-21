@@ -5,6 +5,7 @@ from datetime import date
 from config import active_tables, load_tables
 from db import get_connection
 from extract import extract_table, verify
+from upload import get_session, raw_bucket, upload_table
 
 
 def log_start(conn, run_id, cfg):
@@ -36,12 +37,15 @@ def main():
     run_id = uuid.uuid4()
     load_date = date.today().isoformat()
     results = []
+    session = get_session()
+    bucket = raw_bucket(session)
     with get_connection() as log_conn:
         for cfg in active_tables(load_tables()):
             log_id = log_start(log_conn, run_id, cfg)
             try:
                 out_file, n = extract_table(cfg, load_date)
                 verify(cfg, out_file, n)
+                upload_table(session, bucket, cfg, out_file, n, run_id, load_date)
                 log_finish(log_conn, log_id, "SUCCESS", n)
                 results.append((cfg["name"], "SUCCESS", n))
             except Exception as exc:
